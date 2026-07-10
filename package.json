@@ -1,0 +1,14 @@
+{
+  "name": "boss-apply-helper",
+  "version": "1.7.0",
+  "private": true,
+  "description": "按关键词和城市自动联系 BOSS 直聘匹配岗位的 Chrome 扩展。",
+  "scripts": {
+    "check": "node --check content.js && node --check popup.js && node -e \"const p=require('./package.json');const m=require('./manifest.json');if(p.version!==m.version)throw new Error('package and manifest versions differ')\"",
+    "test": "node tests/logic.test.js",
+    "verify": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

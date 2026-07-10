@@ -1,0 +1,251 @@
+#bah-root {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 350px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 36px);
+  z-index: 2147483647;
+  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+  color: #17211b;
+  line-height: 1.45;
+}
+
+#bah-root,
+#bah-root * {
+  box-sizing: border-box;
+}
+
+.bah-panel {
+  overflow: hidden;
+  border: 1px solid #d7ded9;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 52px rgba(17, 33, 27, 0.22);
+}
+
+.bah-panel.bah-collapsed {
+  width: auto;
+}
+
+.bah-panel.bah-collapsed .bah-body {
+  display: none;
+}
+
+.bah-header {
+  min-height: 48px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e9e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f9fbf8;
+}
+
+.bah-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bah-title strong {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.bah-title span {
+  color: #66736a;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bah-body {
+  max-height: calc(100vh - 86px);
+  overflow: auto;
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.bah-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bah-row > * {
+  min-width: 0;
+}
+
+.bah-grow {
+  flex: 1 1 auto;
+}
+
+.bah-button {
+  min-height: 34px;
+  border: 1px solid #d7ded9;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: #17211b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bah-button:hover {
+  background: #f3f6f4;
+}
+
+.bah-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.bah-button:focus-visible,
+.bah-input:focus-visible,
+.bah-textarea:focus-visible {
+  outline: 2px solid #006dff;
+  outline-offset: 2px;
+}
+
+.bah-button-success {
+  border-color: #287d3c;
+  background: #287d3c;
+  color: #ffffff;
+}
+
+.bah-button-success:hover:not(:disabled) {
+  background: #216b33;
+}
+
+.bah-button-danger {
+  color: #b83232;
+}
+
+.bah-simple-form {
+  display: grid;
+  gap: 10px;
+}
+
+.bah-template {
+  min-height: 58px;
+}
+
+.bah-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bah-compact-grid {
+  align-items: end;
+}
+
+.bah-label {
+  display: grid;
+  gap: 4px;
+  color: #66736a;
+  font-size: 12px;
+}
+
+.bah-input,
+.bah-textarea {
+  width: 100%;
+  border: 1px solid #d7ded9;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #17211b;
+  padding: 8px 9px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.bah-textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.bah-current {
+  display: grid;
+  gap: 5px;
+}
+
+.bah-current strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bah-current strong {
+  font-size: 13px;
+}
+
+.bah-current small {
+  color: #66736a;
+  font-size: 12px;
+}
+
+.bah-action-status {
+  min-height: 30px;
+  border: 1px solid #cfe2dc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #425047;
+  padding: 7px 8px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.bah-highlight {
+  outline: 3px solid #087f6f !important;
+  outline-offset: 2px !important;
+}
+
+.bah-reply-highlight {
+  outline: 3px solid #d68b00 !important;
+  outline-offset: 2px !important;
+}
+
+.bah-resume-highlight {
+  outline: 3px solid #b83232 !important;
+  outline-offset: 2px !important;
+}
+
+.bah-toast {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  max-width: 320px;
+  border-radius: 8px;
+  background: #17211b;
+  color: #ffffff;
+  padding: 9px 11px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  font-size: 13px;
+}
+
+.bah-toast.bah-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 520px) {
+  #bah-root {
+    right: 10px;
+    bottom: 10px;
+    width: calc(100vw - 20px);
+  }
+
+  .bah-grid {
+    grid-template-columns: 1fr;
+  }
+}

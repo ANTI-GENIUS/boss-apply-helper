@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "BOSS 投递助手",
+  "description": "按关键词和城市自动联系匹配岗位，并阻止重复发送和收件人错配。",
+  "version": "1.7.0",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.zhipin.com/*", "https://*.zhipin.com/*"],
+  "action": {
+    "default_title": "BOSS 投递助手",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.zhipin.com/*", "https://*.zhipin.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
