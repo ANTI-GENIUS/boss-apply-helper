@@ -258,7 +258,13 @@ assert.equal(
   "主列表根节点识别不完整时仍应通过职位卡片结构识别岗位",
 );
 assert.equal(
-  isPrimarySearchJobLink({ closest() { return {}; } }),
+  isPrimarySearchJobLink({
+    closest(selector) {
+      if (selector.includes("job-list-container") || selector.includes("rec-job-list")) return null;
+      if (selector.includes("recommend") || selector.includes("related") || selector.includes("similar")) return {};
+      return selector.includes("job-card") ? {} : null;
+    },
+  }),
   false,
   "相似职位或推荐区域中的岗位链接必须排除",
 );
@@ -291,6 +297,42 @@ context.document.querySelectorAll = (selector) => (
 );
 context.location.href = "https://www.zhipin.com/web/geek/jobs?query=AI&city=101020100";
 assert.equal(extractJobs().length, 1, "列表根节点误识别时仍必须提取真实职位卡片");
+
+const currentBossCard = {
+  innerText: "AI 算法实习生\n上海·浦东新区\n示例科技",
+  querySelector(selector) {
+    if (selector.includes("job-name") || selector.includes("job-title")) return { innerText: "AI 算法实习生" };
+    if (selector.includes("company")) return { innerText: "示例科技" };
+    if (selector.includes("job-area") || selector.includes("location") || selector.includes("address")) return { innerText: "上海·浦东新区" };
+    if (selector.includes("job_detail")) return currentBossLink;
+    return null;
+  },
+};
+const currentBossRecommendRoot = {};
+const currentBossListRoot = {
+  closest(selector) {
+    return selector.includes("recommend") ? currentBossRecommendRoot : null;
+  },
+  contains(element) { return element === currentBossLink; },
+  querySelectorAll() { return [currentBossLink]; },
+};
+const currentBossLink = {
+  closest(selector) {
+    if (selector.includes("job-list-container") || selector.includes("rec-job-list")) return currentBossListRoot;
+    if (selector.includes("recommend")) return currentBossRecommendRoot;
+    return selector.includes("job-card") ? currentBossCard : null;
+  },
+  getAttribute() { return "/job_detail/current-boss-card.html"; },
+  innerText: "AI 算法实习生",
+};
+context.document.querySelectorAll = (selector) => (
+  selector.includes("job_detail") ? [currentBossLink] : [currentBossListRoot]
+);
+assert.equal(
+  extractJobs().length,
+  1,
+  "BOSS 主列表位于 recommend-result 容器内时不能被误判为相关推荐",
+);
 context.document.querySelectorAll = originalQuerySelectorAll;
 context.location.href = "https://www.zhipin.com/web/geek/job";
 

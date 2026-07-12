@@ -1,6 +1,6 @@
 {
   "name": "boss-apply-helper",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "private": true,
   "description": "按关键词和城市自动联系 BOSS 直聘匹配岗位的 Chrome 扩展。",
   "scripts": {
