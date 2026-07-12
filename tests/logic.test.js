@@ -18,6 +18,7 @@ source = source.replace(
     collectCityEntries,
     enrichPendingGreeting,
     expandBossSearchTargets,
+    extractJobs,
     findClickableChatTarget,
     state,
     greetingAliases,
@@ -92,6 +93,7 @@ const {
   collectCityEntries,
   enrichPendingGreeting,
   expandBossSearchTargets,
+  extractJobs,
   findClickableChatTarget,
   state,
   greetingAliases,
@@ -246,10 +248,51 @@ assert.equal(
   "主搜索结果卡片应被识别",
 );
 assert.equal(
+  isPrimarySearchJobLink({
+    closest(selector) {
+      if (selector.includes("recommend")) return null;
+      return selector.includes("job-card") ? {} : null;
+    },
+  }, { contains() { return false; } }),
+  true,
+  "主列表根节点识别不完整时仍应通过职位卡片结构识别岗位",
+);
+assert.equal(
   isPrimarySearchJobLink({ closest() { return {}; } }),
   false,
   "相似职位或推荐区域中的岗位链接必须排除",
 );
+const mockJobCard = {
+  innerText: "AI 研发实习生\n上海\n示例智能\n大模型算法研发",
+  querySelector(selector) {
+    if (selector.includes("job-name") || selector.includes("job-title")) return { innerText: "AI 研发实习生" };
+    if (selector.includes("company")) return { innerText: "示例智能" };
+    if (selector.includes("job-area") || selector.includes("location") || selector.includes("address")) return { innerText: "上海" };
+    if (selector.includes("job_detail")) return mockJobLink;
+    return null;
+  },
+};
+const mockJobLink = {
+  closest(selector) {
+    if (selector.includes("recommend") || selector.includes("related") || selector.includes("similar")) return null;
+    return selector.includes("job-card") ? mockJobCard : null;
+  },
+  getAttribute() { return "/job_detail/scanned-card.html"; },
+  innerText: "AI 研发实习生",
+};
+const wrongListRoot = {
+  closest() { return null; },
+  contains() { return false; },
+  querySelectorAll() { return [mockJobLink]; },
+};
+const originalQuerySelectorAll = context.document.querySelectorAll;
+context.document.querySelectorAll = (selector) => (
+  selector.includes("job_detail") ? [mockJobLink] : [wrongListRoot]
+);
+context.location.href = "https://www.zhipin.com/web/geek/jobs?query=AI&city=101020100";
+assert.equal(extractJobs().length, 1, "列表根节点误识别时仍必须提取真实职位卡片");
+context.document.querySelectorAll = originalQuerySelectorAll;
+context.location.href = "https://www.zhipin.com/web/geek/job";
 
 const originalKeywords = state.settings.filterInclude;
 const originalCities = state.settings.filterCity;

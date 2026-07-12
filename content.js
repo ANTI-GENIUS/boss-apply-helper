@@ -310,12 +310,12 @@
   function extractJobs() {
     const scanningSearchList = isBossJobListPage();
     const primaryListRoot = scanningSearchList ? findPrimaryJobListRoot() : null;
-    const linkRoot = primaryListRoot || document;
-    const links = Array.from(linkRoot.querySelectorAll('a[href*="/job_detail/"], a[href*="job_detail"]'))
-      .filter((link) => !scanningSearchList || isPrimarySearchJobLink(link, primaryListRoot));
+    const links = Array.from(document.querySelectorAll('a[href*="/job_detail/"], a[href*="job_detail"]'))
+      .filter((link) => !scanningSearchList || !isRecommendedJobLink(link));
     const cards = links.map((link) => {
       const card = closestCard(link);
-      return extractFromCard(card || link, link, scanningSearchList);
+      const fromPrimarySearchList = scanningSearchList && isPrimarySearchJobLink(link, primaryListRoot);
+      return extractFromCard(card || link, link, fromPrimarySearchList);
     });
 
     const detail = extractDetailPage();
@@ -351,8 +351,8 @@
   }
 
   function isPrimarySearchJobLink(link, primaryListRoot = null) {
-    if (!link || link.closest?.("[class*='recommend'], [class*='related'], [class*='similar']")) return false;
-    if (primaryListRoot) return primaryListRoot.contains(link);
+    if (!link || isRecommendedJobLink(link)) return false;
+    if (primaryListRoot?.contains(link)) return true;
     return Boolean(link.closest?.([
       ".job-card-wrapper",
       ".job-card-body",
@@ -361,6 +361,10 @@
       "[class*='job-primary']",
       "[class*='job-item']",
     ].join(", ")));
+  }
+
+  function isRecommendedJobLink(link) {
+    return Boolean(link?.closest?.("[class*='recommend'], [class*='related'], [class*='similar']"));
   }
 
   function closestCard(link) {
