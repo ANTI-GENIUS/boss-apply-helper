@@ -29,6 +29,7 @@ source = source.replace(
     isChatOpenButtonLabel,
     isJobDetailPage,
     isMessageSendButtonLabel,
+    isPrimarySearchJobLink,
     jobDetailContextMatchesPendingText,
     jobKey,
     keywordGroupMatches,
@@ -102,6 +103,7 @@ const {
   isChatOpenButtonLabel,
   isJobDetailPage,
   isMessageSendButtonLabel,
+  isPrimarySearchJobLink,
   jobDetailContextMatchesPendingText,
   jobKey,
   keywordGroupMatches,
@@ -233,6 +235,21 @@ assert.equal(
   clickableParent,
   "文字在 span 内时应向上找到真实可点击父元素",
 );
+assert.equal(
+  isPrimarySearchJobLink({
+    closest(selector) {
+      if (selector.includes("recommend")) return null;
+      return selector.includes("job-card") ? {} : null;
+    },
+  }),
+  true,
+  "主搜索结果卡片应被识别",
+);
+assert.equal(
+  isPrimarySearchJobLink({ closest() { return {}; } }),
+  false,
+  "相似职位或推荐区域中的岗位链接必须排除",
+);
 
 const originalKeywords = state.settings.filterInclude;
 const originalCities = state.settings.filterCity;
@@ -299,6 +316,34 @@ assert.equal(
   searchTargetMatchesLocation({ cityCode: "101020100", query: "AI 算法 实习生", url: bossSearchUrl }),
   true,
   "到达对应 BOSS 关键词和城市搜索页后才能启动队列",
+);
+const suzhouAiUrl = buildBossSearchUrl("AI", 101190400);
+const suzhouAiTarget = {
+  cityCode: "101190400",
+  cityName: "苏州",
+  keyword: "AI",
+  query: "AI",
+  url: suzhouAiUrl,
+};
+const suzhouDistrictJob = {
+  ...matchingJob,
+  fromPrimarySearchList: true,
+  location: "吴中区·独墅湖",
+  text: "吴中区 独墅湖 大模型研发 实习岗位",
+  title: "AI 研发实习生",
+  url: "https://www.zhipin.com/job_detail/suzhou-district.html",
+};
+context.location.href = suzhouAiUrl;
+assert.equal(
+  matchesKeywordAutoTarget(suzhouDistrictJob, suzhouAiTarget),
+  true,
+  "BOSS 官方苏州搜索范围内的区县岗位不应要求卡片再次出现苏州文字",
+);
+context.location.href = "https://www.zhipin.com/web/geek/jobs";
+assert.equal(
+  matchesKeywordAutoTarget(suzhouDistrictJob, suzhouAiTarget),
+  false,
+  "未处于对应官方城市搜索时不能仅凭区县名称放宽城市校验",
 );
 assert.notEqual(
   sendGuardKey({ jobKey: "job-a" }),

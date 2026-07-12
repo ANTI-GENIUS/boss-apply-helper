@@ -294,11 +294,13 @@
     }
   }
 
-  function scanJobs() {
+  function scanJobs(searchTarget = null) {
     const extracted = extractJobs();
     const existingKey = getSelectedJob() ? jobKey(getSelectedJob()) : "";
     state.allJobs = extracted;
-    state.jobs = extracted.filter(matchesFilters);
+    state.jobs = extracted.filter((job) => (
+      searchTarget ? matchesKeywordAutoTarget(job, searchTarget) : matchesFilters(job)
+    ));
     const selectedIndex = state.jobs.findIndex((job) => jobKey(job) === existingKey);
     state.selectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
     render();
@@ -306,10 +308,14 @@
   }
 
   function extractJobs() {
-    const links = Array.from(document.querySelectorAll('a[href*="/job_detail/"], a[href*="job_detail"]'));
+    const scanningSearchList = isBossJobListPage();
+    const primaryListRoot = scanningSearchList ? findPrimaryJobListRoot() : null;
+    const linkRoot = primaryListRoot || document;
+    const links = Array.from(linkRoot.querySelectorAll('a[href*="/job_detail/"], a[href*="job_detail"]'))
+      .filter((link) => !scanningSearchList || isPrimarySearchJobLink(link, primaryListRoot));
     const cards = links.map((link) => {
       const card = closestCard(link);
-      return extractFromCard(card || link, link);
+      return extractFromCard(card || link, link, scanningSearchList);
     });
 
     const detail = extractDetailPage();
@@ -321,6 +327,40 @@
       unique.set(jobKey(job), job);
     });
     return Array.from(unique.values());
+  }
+
+  function findPrimaryJobListRoot() {
+    const selectors = [
+      ".job-list-box",
+      ".job-list-container",
+      ".search-job-result",
+      ".job-list",
+      "[class*='job-list-box']",
+      "[class*='job-list-container']",
+      "[class*='search-job-result']",
+    ];
+    return uniqueElements(selectors.flatMap((selector) => Array.from(document.querySelectorAll(selector))))
+      .filter((element) => !state.root?.contains(element))
+      .filter((element) => !element.closest?.("[class*='recommend'], [class*='related'], [class*='similar']"))
+      .map((element) => ({
+        element,
+        linkCount: element.querySelectorAll('a[href*="/job_detail/"], a[href*="job_detail"]').length,
+      }))
+      .filter((entry) => entry.linkCount > 0)
+      .sort((a, b) => b.linkCount - a.linkCount)[0]?.element || null;
+  }
+
+  function isPrimarySearchJobLink(link, primaryListRoot = null) {
+    if (!link || link.closest?.("[class*='recommend'], [class*='related'], [class*='similar']")) return false;
+    if (primaryListRoot) return primaryListRoot.contains(link);
+    return Boolean(link.closest?.([
+      ".job-card-wrapper",
+      ".job-card-body",
+      ".job-primary",
+      "[class*='job-card']",
+      "[class*='job-primary']",
+      "[class*='job-item']",
+    ].join(", ")));
   }
 
   function closestCard(link) {
@@ -341,7 +381,7 @@
     return link.parentElement;
   }
 
-  function extractFromCard(card, link) {
+  function extractFromCard(card, link, fromPrimarySearchList = false) {
     const text = cleanText(card.innerText || link.innerText || "");
     const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
     const title = readText(card, [
@@ -378,6 +418,7 @@
     return {
       title,
       company,
+      fromPrimarySearchList,
       hr,
       salary,
       location,
@@ -447,7 +488,12 @@
       ? [normalizeIdentityText(searchTarget.cityName)]
       : splitList(state.settings.filterCity).map(normalizeIdentityText);
     const keywordsOk = keywords.length > 0 && keywords.some((keyword) => keywordGroupMatches(keyword, text));
-    const cityOk = cities.length > 0 && cities.some((city) => text.includes(city));
+    const bossCityScopeActive = Boolean(
+      job.fromPrimarySearchList
+      && searchTarget?.cityCode
+      && searchTargetMatchesLocation(searchTarget),
+    );
+    const cityOk = bossCityScopeActive || (cities.length > 0 && cities.some((city) => text.includes(city)));
     return keywordsOk && cityOk && isActiveRecruitingJob(job);
   }
 
@@ -911,7 +957,8 @@
       showToast("当前发送还没结束，请稍等或点停止连续");
       return;
     }
-    scanJobs();
+    const requestedSearchTarget = options.searchTargets?.[options.searchIndex || 0] || null;
+    scanJobs(requestedSearchTarget);
     const queue = buildBatchQueue(options);
     const searchTargets = Array.isArray(options.searchTargets) ? options.searchTargets : [];
     if (!queue.length && !searchTargets.length) {
@@ -1003,7 +1050,8 @@
       return;
     }
 
-    scanJobs();
+    const activeSearchTarget = batch.searchTargets?.[batch.searchIndex || 0] || null;
+    scanJobs(activeSearchTarget);
     const observedBatch = observeBatchSearchResults(readBatchSend() || batch);
     const latestBatch = extendBatchQueueFromCurrentPage(observedBatch);
     const selected = selectCurrentPageBatchJob(latestBatch) || selectNextBatchJob(latestBatch);
